@@ -1,0 +1,27 @@
+==== PUSH KE GITHUB ====
+
+1. Buka PowerShell
+2. Jalankan command ini:
+
+cd d:\OneDrive\Desktop\tugasanalisis-clean
+git init
+git add .
+git commit -m "React Tugasku"  
+git remote add origin https://github.com/fairuzclaire-hash/tugasanalisis.git
+git branch -M main
+git push -u origin main --force
+
+==== DEPLOY KE VERCEL ====
+
+1. Buka: https://vercel.com
+2. Login dengan GitHub
+3. Klik "Add New Project"
+4. Import repo: fairuzclaire-hash/tugasanalisis
+5. Deploy (default settings OK)
+6. Copy URL Vercel
+
+==== UPDATE PORTFOLIO ====
+
+Setelah dapat URL Vercel (contoh: https://tugasanalisis.vercel.app):
+- Kasih tau Kiro URL tersebut
+- Kiro akan update tombol TUGAS di portfolio untuk redirect ke URL itu
