@@ -1,0 +1,25 @@
+# Environment files (jangan push ke GitHub)
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+*.txt
+!README.md
+!SUPABASE-SETUP.md
+
+# Node modules (jika ada)
+node_modules/
