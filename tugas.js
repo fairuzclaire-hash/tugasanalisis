@@ -17,7 +17,7 @@ const sz=b=>b>1e6?(b/1e6).toFixed(1)+' MB':Math.max(1,Math.round(b/1e3))+' KB';
 const ago=ts=>{const m=Math.floor((Date.now()-ts)/6e4);return m<1?'baru saja':m<60?m+' menit lalu':m<1440?Math.floor(m/60)+' jam lalu':Math.floor(m/1440)+' hari lalu'};
 const OKX=/\.(pdf|docx|pptx|xlsx|zip|jpe?g|png|txt)$/i;
 const Check=()=>html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
-const Ico=({k})=>html`<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${k=='in'?html`<path d="M4 9h3v11H4zM5.5 4a1.7 1.7 0 110 3.4 1.7 1.7 0 010-3.4zM10 9h2.9v1.6c.5-.9 1.6-1.8 3.3-1.8 3.2 0 3.8 2.1 3.8 4.9V20h-3v-5.6c0-1.3 0-3-1.800-3s-2.100 1.400-2.100 2.900V20h-3z"/>`:k=='ig'?html`<g fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/></g><circle cx="17.2" cy="6.8" r="1.2"/>`:html`<path d="M16.500 3c.3 2.300 1.700 3.800 4 4v3c-1.500 0-2.900-.5-4-1.3V15a6 6 0 11-6-6c.3 0 .7 0 1 .1v3.200a2.900 2.900 0 102 2.7V3z"/>`}</svg>`;
+const Ico=({k})=>html`<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${k=='in'?html`<path d="M4 9h3v11H4zM5.5 4a1.7 1.7 0 110 3.4 1.7 1.7 0 010-3.4zM10 9h2.9v1.6c.5-.9 1.6-1.8 3.3-1.8 3.2 0 3.8 2.1 3.8 4.9V20h-3v-5.6c0-1.3 0-3-1.800-3s-2.100 1.400-2.100 2.900V20h-3z"/>`:k=='ig'?html`<g fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/></g><circle cx="17.2" cy="6.8" r="1.2"/>`:html`<path d="M16.500 3c.3 2.300 1.700 3.800 4 4v3c-1.500 0-2.900-.5-4-1.3V15a6 6 0 11-6-6c.3 0 .7 0 1 .1v3.200a2.900 2.900 0 102 2.700V3z"/>`}</svg>`;
 
 function Typing({text}){const[n,setN]=useState(-1);
  useEffect(()=>{let iv;const t=setTimeout(()=>{iv=setInterval(()=>setN(x=>{if(x+1>=text.length)clearInterval(iv);return x+1}),32)},1900);return()=>{clearTimeout(t);clearInterval(iv)}},[text]);
@@ -40,19 +40,23 @@ function Login({onDos,onMhs}){const[r,setR]=useState(null),[n,setN]=useState('')
  <div class="err" role="alert">${e}</div><button class="btn" style=${{width:'100%'}} onClick=${go}>Masuk</button>`}</section></div>`}
 
 function PModal({mk,p,sub,stu,onClose,onSave,onDel,onDl}){
- const[file,setFile]=useState(null),[note,setNote]=useState(sub?sub.note||'':''),[err,setErr]=useState(''),[on,setOn]=useState(false),[busy,setBusy]=useState(false),inp=useRef();
- const pick=f=>{setErr('');if(!f)return;if(f.size>10485760)return setErr('Ukuran berkas melebihi 10 MB. Kompres lalu coba lagi.');if(!OKX.test(f.name))return setErr('Format tidak didukung. Gunakan PDF, DOCX, PPTX, XLSX, ZIP, JPG, PNG, atau TXT.');setFile(f)};
- const save=async()=>{if(!sub&&!file)return setErr('Pilih berkas tugas terlebih dahulu.');setBusy(true);const e=await onSave(file,note);if(e){setErr(e);setBusy(false)}};
+ const[files,setFiles]=useState([]),[note,setNote]=useState(sub?sub.note||'':''),[err,setErr]=useState(''),[on,setOn]=useState(false),[busy,setBusy]=useState(false),inp=useRef();
+ const pickFiles=fl=>{setErr('');const arr=Array.from(fl);for(const f of arr){if(f.size>10485760){setErr('Ukuran berkas melebihi 10 MB. Kompres lalu coba lagi.');return}if(!OKX.test(f.name)){setErr('Format tidak didukung. Gunakan PDF, DOCX, PPTX, XLSX, ZIP, JPG, PNG, atau TXT.');return}}setFiles(prev=>[...prev,...arr])};
+ const rmFile=idx=>setFiles(prev=>prev.filter((_,i)=>i!==idx));
+ const save=async()=>{if(!sub&&files.length===0)return setErr('Pilih berkas tugas terlebih dahulu.');setBusy(true);const e=await onSave(files,note);if(e){setErr(e);setBusy(false)}};
+ const preview=async(f)=>{const url=URL.createObjectURL(f);window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),3000)};
+ const previewSub=async(fileData)=>{try{const b=await fget(fileData.id);if(!b)throw 0;const url=URL.createObjectURL(b);window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),3000)}catch(e){alert('Gagal membuka file')}};
+ const dlSub=async(fileData)=>{try{const b=await fget(fileData.id);if(!b)throw 0;const url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download=fileData.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}catch(e){alert('Gagal mengunduh file')}};
  return html`<${Modal} onClose=${onClose}><div class="dh"><h2>Pertemuan ${p}</h2><p>${mk.n}, semester ${mk.s}</p></div><div class="db">
- ${sub?html`<div class="cur"><b>${sub.file}</b><br/><small>${sz(sub.size)}, dikumpulkan ${fmt(sub.at)}</small>${sub.note&&html`<br/>Catatan: ${sub.note}`}</div>`:!stu&&html`<div class="cur">Belum ada tugas yang dikumpulkan untuk pertemuan ini.</div>`}
- ${stu&&html`<div class="f"><label>${sub?'Ganti berkas (opsional)':'Berkas tugas'}</label>
-  ${file?html`<div class="file"><span>${file.name}, ${sz(file.size)}</span><button aria-label="Hapus berkas" onClick=${()=>setFile(null)}>×</button></div>`
-  :html`<div class=${'drop'+(on?' on':'')} tabIndex="0" role="button" onClick=${()=>inp.current.click()} onKeyDown=${e=>(e.key=='Enter'||e.key==' ')&&(e.preventDefault(),inp.current.click())}
-   onDragOver=${e=>{e.preventDefault();setOn(true)}} onDragLeave=${()=>setOn(false)} onDrop=${e=>{e.preventDefault();setOn(false);pick(e.dataTransfer.files[0])}}><b>Pilih berkas</b> atau seret ke sini<br/><small>PDF, DOCX, PPTX, XLSX, ZIP, JPG, PNG, TXT, maksimal 10 MB</small></div>`}
-  <input type="file" hidden ref=${inp} accept=".pdf,.docx,.pptx,.xlsx,.zip,.jpg,.jpeg,.png,.txt" onChange=${e=>{pick(e.target.files[0]);e.target.value=''}}/></div>
+ ${sub&&sub.files&&sub.files.length>0?html`<div class="cur"><b>${sub.files.length} berkas terkumpul</b><br/><small>dikumpulkan ${fmt(sub.at)}</small>${sub.note&&html`<br/>Catatan: ${sub.note}`}<div style=${{marginTop:12,display:'flex',flexDirection:'column',gap:8}}>${sub.files.map(f=>html`<div key=${f.id} style=${{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 10px',background:'#f9fafb',borderRadius:8,fontSize:13}}><span style=${{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>${f.name} (${sz(f.size)})</span><div style=${{display:'flex',gap:6}}><button onClick=${()=>previewSub(f)} title="Preview" style=${{border:'none',background:'#4338ca',color:'white',borderRadius:6,padding:'4px 10px',cursor:'pointer',fontSize:16}}>👁</button><button onClick=${()=>dlSub(f)} title="Download" style=${{border:'none',background:'#0d9488',color:'white',borderRadius:6,padding:'4px 10px',cursor:'pointer',fontSize:16}}>⬇</button></div></div>`)}</div></div>`:sub?html`<div class="cur">Berkas belum diupload</div>`:!stu&&html`<div class="cur">Belum ada tugas yang dikumpulkan untuk pertemuan ini.</div>`}
+ ${stu&&html`<div class="f"><label>${sub?'Tambah berkas (opsional)':'Berkas tugas (bisa lebih dari 1)'}</label>
+  ${files.length>0?html`<div style=${{display:'flex',flexDirection:'column',gap:8,marginBottom:10}}>${files.map((f,i)=>html`<div key=${i} class="file"><span>${f.name}, ${sz(f.size)}</span><button aria-label="Preview" onClick=${()=>preview(f)} style=${{marginLeft:8,fontSize:16}}>👁</button><button aria-label="Hapus" onClick=${()=>rmFile(i)}>×</button></div>`)}</div>`:null}
+  <div class=${'drop'+(on?' on':'')} tabIndex="0" role="button" onClick=${()=>inp.current.click()} onKeyDown=${e=>(e.key=='Enter'||e.key==' ')&&(e.preventDefault(),inp.current.click())}
+   onDragOver=${e=>{e.preventDefault();setOn(true)}} onDragLeave=${()=>setOn(false)} onDrop=${e=>{e.preventDefault();setOn(false);pickFiles(e.dataTransfer.files)}}><b>Pilih berkas</b> atau seret ke sini<br/><small>Bisa lebih dari 1 file · PDF, DOCX, PPTX, XLSX, ZIP, JPG, PNG, TXT · Max 10 MB/file</small></div>
+  <input type="file" multiple hidden ref=${inp} accept=".pdf,.docx,.pptx,.xlsx,.zip,.jpg,.jpeg,.png,.txt" onChange=${e=>{pickFiles(e.target.files);e.target.value=''}}/></div>
  <div class="f"><label for="pk">Catatan untuk dosen (opsional)</label><textarea id="pk" rows="2" value=${note} onChange=${e=>setNote(e.target.value)}></textarea></div>`}
  <div class="err" role="alert">${err}</div></div>
- <div class="df" style=${{flexWrap:'wrap'}}>${stu&&sub&&html`<button class="btn r" style=${{marginRight:'auto'}} onClick=${onDel}>Hapus</button>`}<button class="btn g" onClick=${onClose}>Tutup</button>${sub&&html`<button class="btn g" onClick=${onDl}>Unduh</button>`}${stu&&html`<button class="btn" disabled=${busy} onClick=${save}>Simpan</button>`}</div><//>`}
+ <div class="df" style=${{flexWrap:'wrap'}}>${stu&&sub&&html`<button class="btn r" style=${{marginRight:'auto'}} onClick=${onDel}>Hapus</button>`}<button class="btn g" onClick=${onClose}>Tutup</button>${stu&&html`<button class="btn" disabled=${busy} onClick=${save}>Simpan</button>`}</div><//>`}
 
 function MkModal({sem,onClose,onAdd}){const[n,setN]=useState(''),[s,setS]=useState(sem),[e,setE]=useState('');
  return html`<${Modal} onClose=${onClose}><div class="dh"><h2>Tambah mata kuliah</h2><p>Langsung tersedia 16 pertemuan.</p></div><div class="db">
@@ -74,13 +78,19 @@ function App(){
  const stu=!!S.session&&S.session.role=='mhs',subOf=(m,p)=>S.subs.find(s=>s.mk==m&&s.p==p),mkOf=i=>S.mk.find(m=>m.id==i);
  const notify=(title,body,kind='ok')=>{const id=Math.random();setTs(t=>[...t,{id,title,body,kind}]);setTimeout(()=>setTs(t=>t.filter(x=>x.id!=id)),4800)};
  const ok=(a,b)=>stu&&notify(a,b);
- const dl=async s=>{try{const b=await fget(s.id);if(!b)throw 0;const d=window.claude&&await window.claude.use('downloads');if(d)await d.save({filename:s.file,data:b});else{const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=s.file;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500)}ok('Berkas diunduh',s.file)}catch(e){if(e&&e.code=='declined')return;notify('Berkas tidak dapat diunduh','Format harus PDF, DOCX, PPTX, XLSX, ZIP, gambar, atau TXT.','err')}};
- const saveSub=async(m,p,file,note)=>{const ex=subOf(m,p),id=ex?ex.id:Date.now();
-  try{if(file)await fput(id,file)}catch(e){return'Berkas gagal disimpan di browser ini. Coba berkas yang lebih kecil.'}
-  setS(s=>({...s,subs:ex?s.subs.map(x=>x.id==id?{...x,note,...(file?{file:file.name,size:file.size,at:Date.now()}:{})}:x):[...s.subs,{id,mk:m,p,file:file.name,size:file.size,at:Date.now(),note}]}));
+ const saveSub=async(m,p,files,note)=>{const ex=subOf(m,p),id=ex?ex.id:Date.now();
+  const savedFiles=ex&&ex.files?[...ex.files]:[];
+  if(files&&files.length>0){
+   for(const file of files){
+    const fid=Date.now()+Math.random().toString(36).slice(2);
+    try{await fput(fid,file)}catch(e){return'Berkas gagal disimpan di browser ini. Coba berkas yang lebih kecil.'}
+    savedFiles.push({id:fid,name:file.name,size:file.size,type:file.type})
+   }
+  }
+  setS(s=>({...s,subs:ex?s.subs.map(x=>x.id==id?{...x,note,files:savedFiles,at:Date.now()}:x):[...s.subs,{id,mk:m,p,files:savedFiles,at:Date.now(),note}]}));
   setModal(null);ok(ex?'Perubahan disimpan':'Tugas berhasil dikumpulkan',mkOf(m).n+', pertemuan '+p)};
- const del=async d=>{if(d.k=='sub'){S.subs.find(x=>x.id==d.id)&&await fdel(d.id).catch(()=>{});setS(s=>({...s,subs:s.subs.filter(x=>x.id!=d.id)}));ok('Pengumpulan dihapus','Berkas sudah dihapus dari pertemuan ini.')}
-  else{for(const x of S.subs.filter(x=>x.mk==d.id))await fdel(x.id).catch(()=>{});setS(s=>({...s,subs:s.subs.filter(x=>x.mk!=d.id),mk:s.mk.filter(x=>x.id!=d.id)}));ok('Mata kuliah dihapus','Beserta semua tugas di dalamnya.')}setModal(null)};
+ const del=async d=>{if(d.k=='sub'){const s=S.subs.find(x=>x.id==d.id);if(s&&s.files){for(const f of s.files)await fdel(f.id).catch(()=>{})}setS(s=>({...s,subs:s.subs.filter(x=>x.id!=d.id)}));ok('Pengumpulan dihapus','Berkas sudah dihapus dari pertemuan ini.')}
+  else{for(const x of S.subs.filter(x=>x.mk==d.id)){if(x.files)for(const f of x.files)await fdel(f.id).catch(()=>{})}setS(s=>({...s,subs:s.subs.filter(x=>x.mk!=d.id),mk:s.mk.filter(x=>x.id!=d.id)}));ok('Mata kuliah dihapus','Beserta semua tugas di dalamnya.')}setModal(null)};
  const T=html`<div class="tsts" aria-live="polite">${ts.map(t=>html`<div class=${'ts '+t.kind} key=${t.id}><span class="ti">${t.kind=='err'?'!':html`<${Check}/>`}</span><div><b>${t.title}</b><span>${t.body}</span></div><i></i></div>`)}</div>`;
  if(!S.session)return html`<${Fragment}><${Login} onDos=${()=>setS(s=>({...s,session:{role:'dos'}}))} onMhs=${()=>{setS(s=>({...s,session:{role:'mhs'}}));notify('Berhasil masuk','Selamat datang kembali, '+AKUN.name.split(' ')[0]+'.')}}/>${T}<//>`;
  const list=S.mk.filter(m=>m.s==sem),cnt=k=>S.subs.filter(x=>{const m=mkOf(x.mk);return m&&m.s==k}).length;
@@ -95,7 +105,7 @@ function App(){
  ${!list.length&&!stu&&html`<div class="empty" style=${{marginBottom:40}}><b>Belum ada mata kuliah di semester ini</b>Mata kuliah akan muncul setelah ditambahkan mahasiswa.</div>`}
  <${Comments} list=${S.comments} stu=${stu} onAdd=${(name,text)=>{setS(s=>({...s,comments:[...s.comments,{id:Date.now(),name,text,at:Date.now()}]}));ok('Komentar terkirim','Terima kasih sudah memberi masukan.')}} onDel=${id=>setS(s=>({...s,comments:s.comments.filter(c=>c.id!=id)}))}/></main>
  <footer><div class="wrap fo"><div><b>Tugasku</b><small>Dibuat dengan React untuk pengumpulan tugas kuliah.</small></div><div class="soc">${SOS.map(o=>html`<a key=${o.k} href=${o.u} target="_blank" rel="noopener noreferrer" aria-label=${o.n} title=${o.n}><${Ico} k=${o.k}/></a>`)}</div></div></footer>
- ${modal&&modal.t=='p'&&html`<${PModal} mk=${mkOf(modal.m)} p=${modal.p} sub=${subOf(modal.m,modal.p)} stu=${stu} onClose=${()=>setModal(null)} onSave=${(f,n)=>saveSub(modal.m,modal.p,f,n)} onDl=${()=>dl(subOf(modal.m,modal.p))} onDel=${()=>{const s=subOf(modal.m,modal.p);setModal({t:'del',k:'sub',id:s.id,txt:'Berkas '+s.file+' pada pertemuan '+modal.p+' akan dihapus.'})}}/>`}
+ ${modal&&modal.t=='p'&&html`<${PModal} mk=${mkOf(modal.m)} p=${modal.p} sub=${subOf(modal.m,modal.p)} stu=${stu} onClose=${()=>setModal(null)} onSave=${(fs,n)=>saveSub(modal.m,modal.p,fs,n)} onDel=${()=>{const s=subOf(modal.m,modal.p);setModal({t:'del',k:'sub',id:s.id,txt:'Berkas pada pertemuan '+modal.p+' akan dihapus.'})}}/>`}
  ${modal&&modal.t=='mk'&&html`<${MkModal} sem=${sem} onClose=${()=>setModal(null)} onAdd=${(n,s)=>{setS(x=>({...x,mk:[...x.mk,{id:Date.now(),s,n,c:x.mk.length%6}]}));setSem(s);setModal(null);ok('Mata kuliah ditambahkan',n+', semester '+s)}}/>`}
  ${modal&&modal.t=='del'&&html`<${Modal} onClose=${()=>setModal(null)}><div class="dh"><h2>Hapus?</h2><p>${modal.txt}</p></div><div class="df" style=${{paddingTop:20}}><button class="btn g" onClick=${()=>setModal(null)}>Batal</button><button class="btn r" onClick=${()=>del(modal)}>Ya, hapus</button></div><//>`}
  ${T}<//>`}
