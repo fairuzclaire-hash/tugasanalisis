@@ -104,19 +104,25 @@ function App(){
  const[ts,setTs]=useState([]);
  const[loading,setLoading]=useState(true);
 
- // Load submissions from MongoDB
+ // Load submissions and mata kuliah from MongoDB
  useEffect(()=>{
-   const loadSubs=async()=>{
+   const loadData=async()=>{
      try{
-       const data=await apiCall('/api/submissions');
-       setSubs(data);
+       const [subsData, mkData]=await Promise.all([
+         apiCall('/api/submissions'),
+         apiCall('/api/matakuliah')
+       ]);
+       setSubs(subsData);
+       if(mkData.length>0){
+         setMk(mkData.map(m=>({id:m._id,s:m.s,n:m.n,c:m.c||0})));
+       }
      }catch(e){
-       console.error('Failed to load submissions:',e);
+       console.error('Failed to load data:',e);
      }finally{
        setLoading(false);
      }
    };
-   loadSubs();
+   loadData();
  },[]);
 
  const stu=!!session&&session.role=='mhs';
@@ -171,15 +177,20 @@ function App(){
        notify('Gagal menghapus','Coba lagi.','err');
      }
    }else{
-     // Delete mata kuliah
-     const toDelete=subs.filter(x=>x.mk==d.id);
-     for(const s of toDelete){
-       try{await apiCall('/api/delete-submission',{method:'DELETE',body:JSON.stringify({id:s._id})})}catch(e){}
+     // Delete mata kuliah from MongoDB
+     try{
+       await apiCall('/api/matakuliah',{method:'DELETE',body:JSON.stringify({id:d.id})});
+       const toDelete=subs.filter(x=>x.mk==d.id);
+       for(const s of toDelete){
+         try{await apiCall('/api/delete-submission',{method:'DELETE',body:JSON.stringify({id:s._id})})}catch(e){}
+       }
+       setMk(m=>m.filter(x=>x.id!=d.id));
+       const data=await apiCall('/api/submissions');
+       setSubs(data);
+       ok('Mata kuliah dihapus','Beserta semua tugas di dalamnya.');
+     }catch(e){
+       notify('Gagal menghapus MK','Coba lagi.','err');
      }
-     setMk(m=>m.filter(x=>x.id!=d.id));
-     const data=await apiCall('/api/submissions');
-     setSubs(data);
-     ok('Mata kuliah dihapus','Beserta semua tugas di dalamnya.');
    }
    setModal(null);
  };
@@ -201,7 +212,7 @@ function App(){
  ${list.length?list.map(m=>{const n=subs.filter(s=>s.mk==m.id).length;return html`<section key=${m.id} class="sec"><div class="sh"><h2 style=${{background:CL[m.c]}}>${m.n}</h2>${stu&&html`<button class="x" aria-label=${'Hapus '+m.n} onClick=${()=>confirm('Yakin ingin hapus mata kuliah ini?')&&del({k:'mk',id:m.id})}>×</button>`}</div><div class="grid">${Array.from({length:P},(_,i)=>{const p=i+1,s=subOf(m.id,p),on=!!s;return html`<button key=${p} class=${'cell'+(on?' on':'')} aria-label=${'Pertemuan '+p+(on?' (sudah ada tugas)':'')} onClick=${()=>setModal({t:'p',mk:m,p})}>${p}${on&&html`<${Check}/>`}</button>`})}</div>${n?html`<small class="inf">${n} tugas sudah dikumpulkan</small>`:null}</section>`}):html`<p class="cs">Belum ada mata kuliah di semester ${sem}.</p>`}
  ${stu&&html`<button class="btn" style=${{marginTop:24}} onClick=${()=>setModal({t:'mk',sem})}>+ Tambah mata kuliah</button>`}
  ${modal&&modal.t=='p'&&html`<${PModal} mk=${modal.mk} p=${modal.p} sub=${subOf(modal.mk.id,modal.p)} stu=${stu} onClose=${()=>setModal(null)} onSave=${(f,n)=>saveSub(modal.mk.id,modal.p,f,n)} onDel=${()=>confirm('Yakin ingin hapus?')&&del({k:'sub',id:subOf(modal.mk.id,modal.p)._id})}/>`}
- ${modal&&modal.t=='mk'&&html`<${MkModal} sem=${modal.sem} onClose=${()=>setModal(null)} onAdd=${(n,s)=>{setMk(m=>[...m,{id:Date.now(),s,n,c:Math.floor(Math.random()*CL.length)}]);setModal(null);notify('Mata kuliah ditambahkan',n)}}/>`}
+ ${modal&&modal.t=='mk'&&html`<${MkModal} sem=${modal.sem} onClose=${()=>setModal(null)} onAdd=${async(n,s)=>{const newMk={s,n,c:Math.floor(Math.random()*CL.length)};try{const result=await apiCall('/api/matakuliah',{method:'POST',body:JSON.stringify(newMk)});setMk(m=>[...m,{id:result._id,s:result.s,n:result.n,c:result.c}]);setModal(null);notify('Mata kuliah ditambahkan',n)}catch(e){notify('Gagal menambah MK','Coba lagi.','err')}}}/>`}
  </main><footer><div class="wrap"><p>Website tugas kuliah oleh ${AKUN.name.split(' ')[0]}</p><div class="soc">${SOS.map(x=>html`<a key=${x.k} href=${x.u} target="_blank" rel="noopener" aria-label=${x.n}><${Ico} k=${x.k}/></a>`)}</div></div></footer>${T}<//>`;
 }
 
