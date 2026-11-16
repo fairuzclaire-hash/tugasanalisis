@@ -159,12 +159,11 @@ function App(){
    loadData();
  },[]);
 
- const stu=!!session&&session.role=='mhs';
  const subOf=(m,p)=>subs.find(s=>s.mk==m&&s.p==p);
  const mkOf=i=>mk.find(m=>m.id==i);
  
  const notify=(title,body,kind='ok')=>{const id=Math.random();setTs(t=>[...t,{id,title,body,kind}]);setTimeout(()=>setTs(t=>t.filter(x=>x.id!=id)),4800)};
- const ok=(a,b)=>stu&&notify(a,b);
+ const ok=(a,b)=>session&&session.role=='mhs'&&notify(a,b);
  
  const saveSub=async(m,p,files,note)=>{
    try{
@@ -264,8 +263,8 @@ function App(){
  const roleLabel=viewer?'Viewer':dosen?'Dosen pengampu':AKUN.name;
  
  return html`<${Fragment}><header><div class="wrap bar"><div class="logo"><b>T</b>Tugasku</div><div class="who"><span>${roleLabel}</span><button class="btn g sm" onClick=${()=>setSession(null)}>Keluar</button></div></div></header>
- <main class="wrap"><section class="top"><h1>${stu?'Halo, '+AKUN.name.split(' ')[0]:'Dashboard dosen'}</h1>
- <p>${subs.length} tugas sudah dikumpulkan. ${stu?'Pilih semester, lalu ketuk nomor pertemuan untuk mengumpulkan tugas.':'Pilih semester, lalu ketuk nomor pertemuan yang berwarna untuk melihat dan mengunduh tugas.'}</p>
+ <main class="wrap"><section class="top"><h1>${stu?'Halo, '+AKUN.name.split(' ')[0]:viewer?'Dashboard Viewer':'Dashboard Dosen'}</h1>
+ <p>${subs.length} tugas sudah dikumpulkan. ${stu?'Pilih semester, lalu ketuk nomor pertemuan untuk mengumpulkan tugas.':viewer?'Lihat tugas yang sudah dikumpulkan mahasiswa.':'Pilih semester, lalu ketuk nomor pertemuan yang berwarna untuk melihat dan mengunduh tugas.'}</p>
  <${Typing} text="Ini website tugas. Kumpulkan, cek, dan unduh tugas kuliah dengan mudah, semua dalam satu halaman."/></section>
  <nav class="sems">${[1,2,3,4,5,6,7,8].map(k=>html`<button key=${k} class="sem" aria-pressed=${sem==k} onClick=${()=>setSem(k)}>Semester ${k}${cnt(k)?html` <em>${cnt(k)}</em>`:''}</button>`)}</nav>
  <div class="grid">${list.length?list.map((m,i)=>{const n=subs.filter(s=>s.mk==m.id).length;return html`<section key=${m.id} class="mk" style=${{['--c']:CL[m.c],['--i']:i}}><div class="mh"><div><h3>${m.n}</h3><span>Semester ${m.s}</span></div>${stu&&html`<button class="x" aria-label=${'Hapus '+m.n} onClick=${()=>confirm('Yakin ingin hapus mata kuliah ini?')&&del({k:'mk',id:m.id})}>×</button>`}</div><div class="ps">${Array.from({length:P},(_,i)=>{const p=i+1,s=subOf(m.id,p),on=!!s;return html`<button key=${p} class=${'p'+(on?' on':'')} aria-label=${'Pertemuan '+p+(on?' (sudah ada tugas)':'')} onClick=${()=>setModal({t:'p',mk:m,p})}>${p}${on&&html`<${Check}/>`}</button>`})}</div>${n?html`<small class="inf" style=${{display:'block',marginTop:8,color:'var(--mu)',fontSize:13}}>${n} tugas sudah dikumpulkan</small>`:null}</section>`}):html`<p class="empty"><b>Belum ada mata kuliah di semester ${sem}</b>${stu?'Klik tombol di bawah untuk menambahkan mata kuliah.':'Mata kuliah akan muncul setelah mahasiswa menambahkannya.'}</p>`}</div>
