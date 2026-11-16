@@ -89,9 +89,18 @@ function MkModal({sem,onClose,onAdd}){const[n,setN]=useState(''),[s,setS]=useSta
  <div class="f"><label for="ms">Semester</label><select id="ms" value=${s} onChange=${x=>setS(+x.target.value)}>${[1,2,3,4,5,6,7,8].map(k=>html`<option key=${k} value=${k}>Semester ${k}</option>`)}</select></div><div class="err" role="alert">${e}</div></div>
  <div class="df"><button class="btn g" onClick=${onClose}>Batal</button><button class="btn" onClick=${()=>n.trim()?onAdd(n.trim(),s):setE('Nama mata kuliah wajib diisi.')}>Tambah</button></div><//>`}
 
+function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.name:''),[text,setText]=useState(''),[e,setE]=useState('');
+ const send=()=>{if(!name.trim()||!text.trim())return setE('Nama dan komentar wajib diisi.');onAdd(name.trim(),text.trim());setText('');setE('')};
+ return html`<section class="cm"><h2>Komentar</h2><p class="cs">Tinggalkan pesan atau saran untuk website ini.</p>
+ <div class="two"><div class="f"><label for="cn">Nama</label><input id="cn" maxLength="40" value=${name} onChange=${x=>setName(x.target.value)}/></div></div>
+ <div class="f"><label for="ct">Komentar</label><textarea id="ct" rows="3" maxLength="400" value=${text} onChange=${x=>setText(x.target.value)}></textarea></div>
+ <div style=${{display:'flex',gap:12,alignItems:'center'}}><button class="btn" onClick=${send}>Kirim komentar</button><span class="err" role="alert" style=${{margin:0}}>${e}</span></div>
+ <div class="cl">${list.length?list.slice().sort((a,b)=>b.at-a.at).map(c=>html`<div class="ci" key=${c._id}><span class="av" style=${{background:CL[c.name.length%6]}}>${c.name[0].toUpperCase()}</span><div style=${{flex:1}}><b>${c.name}</b><small>${ago(c.at)}</small><p>${c.text}</p></div>${stu&&html`<button class="x" aria-label="Hapus komentar" onClick=${()=>onDel(c._id)}>×</button>`}</div>`):html`<p class="cs">Belum ada komentar. Jadilah yang pertama.</p>`}</div></section>`}
+
 function App(){
  const[session,setSession]=useState(null);
  const[subs,setSubs]=useState([]);
+ const[comments,setComments]=useState([]);
  const[mk,setMk]=useState([
    {id:1,s:1,n:'Pengantar Teknologi Informasi',c:0},
    {id:2,s:1,n:'Matematika Dasar',c:1},
@@ -104,18 +113,20 @@ function App(){
  const[ts,setTs]=useState([]);
  const[loading,setLoading]=useState(true);
 
- // Load submissions and mata kuliah from MongoDB
+ // Load submissions, mata kuliah, and comments from MongoDB
  useEffect(()=>{
    const loadData=async()=>{
      try{
-       const [subsData, mkData]=await Promise.all([
+       const [subsData, mkData, commentsData]=await Promise.all([
          apiCall('/api/submissions'),
-         apiCall('/api/matakuliah')
+         apiCall('/api/matakuliah'),
+         apiCall('/api/comments')
        ]);
        setSubs(subsData);
        if(mkData.length>0){
          setMk(mkData.map(m=>({id:m._id,s:m.s,n:m.n,c:m.c||0})));
        }
+       setComments(commentsData);
      }catch(e){
        console.error('Failed to load data:',e);
      }finally{
@@ -194,6 +205,27 @@ function App(){
    }
    setModal(null);
  };
+
+ const addComment=async(name,text)=>{
+   try{
+     await apiCall('/api/comments',{method:'POST',body:JSON.stringify({name,text})});
+     const data=await apiCall('/api/comments');
+     setComments(data);
+     ok('Komentar terkirim','Terima kasih sudah memberi masukan.');
+   }catch(e){
+     notify('Gagal mengirim komentar','Coba lagi.','err');
+   }
+ };
+
+ const delComment=async(id)=>{
+   try{
+     await apiCall('/api/comments',{method:'DELETE',body:JSON.stringify({id})});
+     const data=await apiCall('/api/comments');
+     setComments(data);
+   }catch(e){
+     notify('Gagal menghapus komentar','Coba lagi.','err');
+   }
+ };
  
  const T=html`<div class="tsts" aria-live="polite">${ts.map(t=>html`<div class=${'ts '+t.kind} key=${t.id}><span class="ti">${t.kind=='err'?'!':html`<${Check}/>`}</span><div><b>${t.title}</b><span>${t.body}</span></div><i></i></div>`)}</div>`;
  
@@ -213,6 +245,7 @@ function App(){
  ${stu&&html`<button class="btn" style=${{marginTop:24}} onClick=${()=>setModal({t:'mk',sem})}>+ Tambah mata kuliah</button>`}
  ${modal&&modal.t=='p'&&html`<${PModal} mk=${modal.mk} p=${modal.p} sub=${subOf(modal.mk.id,modal.p)} stu=${stu} onClose=${()=>setModal(null)} onSave=${(f,n)=>saveSub(modal.mk.id,modal.p,f,n)} onDel=${()=>confirm('Yakin ingin hapus?')&&del({k:'sub',id:subOf(modal.mk.id,modal.p)._id})}/>`}
  ${modal&&modal.t=='mk'&&html`<${MkModal} sem=${modal.sem} onClose=${()=>setModal(null)} onAdd=${async(n,s)=>{const newMk={s,n,c:Math.floor(Math.random()*CL.length)};try{const result=await apiCall('/api/matakuliah',{method:'POST',body:JSON.stringify(newMk)});setMk(m=>[...m,{id:result._id,s:result.s,n:result.n,c:result.c}]);setModal(null);notify('Mata kuliah ditambahkan',n)}catch(e){notify('Gagal menambah MK','Coba lagi.','err')}}}/>`}
+ <${Comments} list=${comments} stu=${stu} onAdd=${addComment} onDel=${delComment}/>
  </main><footer><div class="wrap"><p>Website tugas kuliah oleh ${AKUN.name.split(' ')[0]}</p><div class="soc">${SOS.map(x=>html`<a key=${x.k} href=${x.u} target="_blank" rel="noopener" aria-label=${x.n}><${Ico} k=${x.k}/></a>`)}</div></div></footer>${T}<//>`;
 }
 
