@@ -8,7 +8,7 @@ const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:30
 
 const P=16,CL=['#4f46e5','#0d9488','#e8590c','#d6336c','#1c7ed6','#b7791f'];
 const AKUN={nim:'240511102',name:'Fairuz Triharyadi',pw:'Papoi123'};
-const SOS=[{k:'in',n:'LinkedIn',u:'https://www.linkedin.com/in/username-kamu'},{k:'ig',n:'Instagram',u:'https://www.instagram.com/username_kamu'},{k:'tt',n:'TikTok',u:'https://www.tiktok.com/@username_kamu'}];
+const SOS=[{k:'in',n:'LinkedIn',u:'https://www.linkedin.com/in/muhammad-fairuz-triharyadi-93a541369'},{k:'ig',n:'Instagram',u:'https://www.instagram.com/pailatte1'},{k:'tt',n:'TikTok',u:'https://www.tiktok.com/@payaruz'}];
 const APP_NAME='PayFlow';
 
 const fmt=ts=>new Date(ts).toLocaleString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -93,26 +93,46 @@ function MkModal({sem,onClose,onAdd}){const[n,setN]=useState(''),[s,setS]=useSta
 
 function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.name:''),[text,setText]=useState(''),[e,setE]=useState(''),[cooldown,setCooldown]=useState(0);
  const badWords=[
-   // Umum
-   'anjing','babi','kontol','memek','jancok','bangsat','tai','asu','tolol','goblok','bodoh','idiot','bajingan','kampret','setan','ngentot','pepek','puki','jembut','perek','coli','colmek','kimak','eek','entot','pelacur','lonte','sundal','monyet','anjir','njir','bangke','silit','pantek','kntl','itil','ajg','mmk',
-   // Sunda
-   'titit','bego','yatim','peler','heunceut','somplak','bajigur','barudak','siah','bangkong','goreng','baheula',
-   // Jawa
-   'cok','jancuk','matamu','asu','bajingan','pekok','gembel','edan','gemblung','ndasmu','cangkem','sampah','kontl','jancok',
-   // LGBT Flag emoji
+   // INDONESIA
+   'kontol','memek','ngentot','jembut','bangsat','bajingan','anjing','babi','goblok','tolol','idiot','brengsek','asu','kampret','tai','taik','keparat','monyet','perek','lonte','pelacur','bego','dungu','sampah',
+   'pepek','puki','coli','colmek','kimak','eek','entot','sundal','anjir','njir','bangke','silit','pantek','kntl','itil','ajg','mmk',
+   // SUNDA
+   'titit','yatim','peler','heunceut','somplak','bajigur','barudak','siah','bangkong','goreng','baheula',
+   // JAWA
+   'cok','jancuk','matamu','pekok','gembel','edan','gemblung','ndasmu','cangkem','jancok','kontl',
+   // MALAYSIA
+   'pukimak','kimak','cibai','lancau','bodoh','bangang','sial','celaka','bengap','pundek','palat','pantat',
+   // PHILIPPINES / TAGALOG
+   'putangina','puta','putang ina','gago','tanga','bobo','ulol','tarantado','leche','lintik','hayop','hindot','pakyu','inutil','demonyo',
+   // CHINA / MANDARIN
+   '傻逼','傻屄','笨蛋','白痴','废物','混蛋','王八蛋','操','卧槽','他妈的','去死','狗东西','垃圾',
+   // THAILAND
+   'ควย','หี','เหี้ย','สัส','ไอ้เหี้ย','อีเหี้ย','โง่','ควาย','ระยำ','ชาติหมา',
+   // ENGLISH
+   'fuck','fucking','motherfucker','bitch','asshole','bastard','dick','dickhead','cunt','shit','bullshit','dumbass','retard','stfu','gtfo',
+   // BYPASS VARIATIONS
+   'lotnok','koontooll','k0nt0l','k o n t o l','k@nt0l','k.o.n.t.o.l','kntol','koontol','kontoll','kontolll','memekk','m3m3k','m e m e k','ng3nt0t','b4ngs4t','g0bl0k','t0l0l','f.u.c.k','f u c k','sh1t','b1tch','a55h0le',
+   // LGBT FLAG
    '🏳️‍🌈','🏳‍🌈'
  ];
  const normalize=str=>{
    let s=str.toLowerCase()
-     .replace(/[^a-z]/g,'')
+     .replace(/[^a-z\u4e00-\u9fff\u0e00-\u0e7f]/g,'') // Keep Latin, Chinese, Thai
      .replace(/(.)\1+/g,'$1')
-     .replace(/0/g,'o').replace(/1/g,'i').replace(/3/g,'e').replace(/4/g,'a').replace(/5/g,'s').replace(/7/g,'t').replace(/8/g,'b');
+     .replace(/0/g,'o').replace(/1/g,'i').replace(/3/g,'e').replace(/4/g,'a').replace(/5/g,'s').replace(/7/g,'t').replace(/8/g,'b')
+     .replace(/@/g,'a').replace(/\$/g,'s').replace(/\./g,'');
    return s;
  };
  const hasBadWord=str=>{
    const clean=normalize(str);
    const reversed=clean.split('').reverse().join('');
+   // Also check original string for phrases with spaces
+   const original=str.toLowerCase();
    return badWords.some(w=>{
+     if(w.includes(' ')||w.includes('.')){
+       // Check phrase/spaced words directly
+       return original.includes(w);
+     }
      const cleanWord=normalize(w);
      return clean.includes(cleanWord)||reversed.includes(cleanWord)||clean.includes(cleanWord.split('').reverse().join(''));
    });
