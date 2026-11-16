@@ -2,6 +2,7 @@
   "name": "tugasanalisis",
   "version": "1.0.0",
   "description": "Sistem Pengumpulan Tugas Online",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
