@@ -1,3 +1,4 @@
+// MongoDB Atlas Integration
 const{useState,useEffect,useRef,Fragment}=React;
 const h=(t,p,...c)=>{if(p&&typeof t=='string'){p={...p};if('class'in p){p.className=p.class;delete p.class}if('for'in p){p.htmlFor=p.for;delete p.for}}return React.createElement(t,p,...c)};
 const html=htm.bind(h);
