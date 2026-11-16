@@ -89,13 +89,35 @@ function MkModal({sem,onClose,onAdd}){const[n,setN]=useState(''),[s,setS]=useSta
  <div class="f"><label for="ms">Semester</label><select id="ms" value=${s} onChange=${x=>setS(+x.target.value)}>${[1,2,3,4,5,6,7,8].map(k=>html`<option key=${k} value=${k}>Semester ${k}</option>`)}</select></div><div class="err" role="alert">${e}</div></div>
  <div class="df"><button class="btn g" onClick=${onClose}>Batal</button><button class="btn" onClick=${()=>n.trim()?onAdd(n.trim(),s):setE('Nama mata kuliah wajib diisi.')}>Tambah</button></div><//>`}
 
-function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.name:''),[text,setText]=useState(''),[e,setE]=useState('');
- const send=()=>{if(!name.trim()||!text.trim())return setE('Nama dan komentar wajib diisi.');onAdd(name.trim(),text.trim());setText('');setE('')};
+function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.name:''),[text,setText]=useState(''),[e,setE]=useState(''),[cooldown,setCooldown]=useState(0);
+ const badWords=['anjing','babi','kontol','memek','jancok','bangsat','tai','asu','tolol','goblok','bodoh','idiot','bajingan','kampret','setan','ngentot','pepek','puki','jembut','perek','coli','colmek','kimak','eek','entot','pelacur','lonte','sundal','monyet','anjir','njir','bangke','silit','pantek','kntl','itil','ajg','mmk'];
+ const normalize=str=>{
+   let s=str.toLowerCase()
+     .replace(/[^a-z]/g,'')
+     .replace(/(.)\1+/g,'$1')
+     .replace(/0/g,'o').replace(/1/g,'i').replace(/3/g,'e').replace(/4/g,'a').replace(/5/g,'s').replace(/7/g,'t').replace(/8/g,'b');
+   return s;
+ };
+ const hasBadWord=str=>{
+   const clean=normalize(str);
+   const reversed=clean.split('').reverse().join('');
+   return badWords.some(w=>{
+     const cleanWord=normalize(w);
+     return clean.includes(cleanWord)||reversed.includes(cleanWord)||clean.includes(cleanWord.split('').reverse().join(''));
+   });
+ };
+ useEffect(()=>{if(cooldown>0){const t=setTimeout(()=>setCooldown(c=>c-1),1000);return()=>clearTimeout(t)}},[cooldown]);
+ const send=()=>{
+   if(cooldown>0)return setE(`Tunggu ${cooldown} detik sebelum mengirim komentar lagi.`);
+   if(!name.trim()||!text.trim())return setE('Nama dan komentar wajib diisi.');
+   if(hasBadWord(name)||hasBadWord(text))return setE('Komentar mengandung kata tidak pantas. Gunakan bahasa yang sopan.');
+   onAdd(name.trim(),text.trim());setText('');setE('');setCooldown(30)
+ };
  return html`<section class="cm"><h2>Komentar</h2><p class="cs">Tinggalkan pesan atau saran untuk website ini.</p>
  <div class="two"><div class="f"><label for="cn">Nama</label><input id="cn" maxLength="40" value=${name} onChange=${x=>setName(x.target.value)}/></div></div>
  <div class="f"><label for="ct">Komentar</label><textarea id="ct" rows="3" maxLength="400" value=${text} onChange=${x=>setText(x.target.value)}></textarea></div>
  <div style=${{display:'flex',gap:12,alignItems:'center'}}><button class="btn" onClick=${send}>Kirim komentar</button><span class="err" role="alert" style=${{margin:0}}>${e}</span></div>
- <div class="cl">${list.length?list.slice().sort((a,b)=>b.at-a.at).map(c=>html`<div class="ci" key=${c._id}><span class="av" style=${{background:CL[c.name.length%6]}}>${c.name[0].toUpperCase()}</span><div style=${{flex:1}}><b>${c.name}</b><small>${ago(c.at)}</small><p>${c.text}</p></div>${stu&&html`<button class="x" aria-label="Hapus komentar" onClick=${()=>onDel(c._id)}>×</button>`}</div>`):html`<p class="cs">Belum ada komentar. Jadilah yang pertama.</p>`}</div></section>`}
+ <div class="cl">${list.length?list.slice().sort((a,b)=>b.at-a.at).map(c=>html`<div class="ci" key=${c._id}><span class="av" style=${{background:CL[c.name.length%6]}}>${c.name[0].toUpperCase()}</span><div style=${{flex:1}}><b>${c.name}</b><small>${ago(c.at)}</small><p>${c.text}</p></div><button class="x" aria-label="Hapus komentar" onClick=${()=>confirm('Hapus komentar ini?')&&onDel(c._id)}>×</button></div>`):html`<p class="cs">Belum ada komentar. Jadilah yang pertama.</p>`}</div></section>`}
 
 function App(){
  const[session,setSession]=useState(null);
