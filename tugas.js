@@ -51,14 +51,15 @@ function Typing({text}){const[n,setN]=useState(-1);
 function Modal({children,onClose}){useEffect(()=>{const k=e=>e.key=='Escape'&&onClose();addEventListener('keydown',k);return()=>removeEventListener('keydown',k)},[]);
  return html`<div class="ov" onClick=${e=>e.target==e.currentTarget&&onClose()}><div class="md" role="dialog" aria-modal="true">${children}</div></div>`}
 
-function Login({onDos,onMhs}){const[r,setR]=useState(null),[n,setN]=useState(''),[p,setP]=useState(''),[e,setE]=useState('');
+function Login({onViewer,onDos,onMhs}){const[r,setR]=useState(null),[n,setN]=useState(''),[p,setP]=useState(''),[e,setE]=useState('');
  const go=()=>n.trim()!=AKUN.nim||p!=AKUN.pw?setE('NIM atau kata sandi salah. Periksa lagi lalu coba masuk kembali.'):onMhs();
  const key=ev=>ev.key=='Enter'&&go();
  return html`<div class="lg"><section class="art"><div class="logo"><b>T</b>Tugasku</div><div><h1>Kumpulkan tugas tepat waktu, tanpa ribet.</h1>
  <div style=${{marginTop:18}}><${Typing} text="Ini website tugas. Pilih semester, ketuk pertemuan, dan tugasmu langsung terkirim ke dosen."/></div>
  <div class="stack"><div class="sheet s1"><i></i><i></i><i></i></div><div class="sheet s2"><i></i><i></i><i></i></div><div class="sheet s3"><i></i><i></i><i></i><span class="stamp">Terkumpul</span></div></div></div><span></span></section>
  <section class="pn"><h2>Selamat datang</h2><p>Pilih peran untuk melanjutkan.</p>
- <div class="roles"><button class="role" onClick=${onDos}><b>Dosen</b><span>Langsung masuk, tanpa kata sandi</span></button>
+ <div class="roles"><button class="role" onClick=${onViewer}><b>Viewer</b><span>Lihat tugas tanpa bisa edit</span></button>
+ <button class="role" onClick=${onDos}><b>Dosen Pengampu</b><span>Lihat dan download tugas mahasiswa</span></button>
  <button class="role" aria-pressed=${r=='m'} onClick=${()=>setR('m')}><b>Mahasiswa</b><span>Masuk dengan NIM dan kata sandi</span></button></div>
  ${r=='m'&&html`<div class="f"><label for="lN">NIM</label><input id="lN" autofocus inputmode="numeric" autocomplete="username" value=${n} onChange=${x=>setN(x.target.value)} onKeyDown=${key}/></div>
  <div class="f"><label for="lP">Kata sandi</label><input id="lP" type="password" autocomplete="current-password" value=${p} onChange=${x=>setP(x.target.value)} onKeyDown=${key}/></div>
@@ -117,7 +118,7 @@ function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.
  <div class="two"><div class="f"><label for="cn">Nama</label><input id="cn" maxLength="40" value=${name} onChange=${x=>setName(x.target.value)}/></div></div>
  <div class="f"><label for="ct">Komentar</label><textarea id="ct" rows="3" maxLength="400" value=${text} onChange=${x=>setText(x.target.value)}></textarea></div>
  <div style=${{display:'flex',gap:12,alignItems:'center'}}><button class="btn" onClick=${send}>Kirim komentar</button><span class="err" role="alert" style=${{margin:0}}>${e}</span></div>
- <div class="cl">${list.length?list.slice().sort((a,b)=>b.at-a.at).map(c=>html`<div class="ci" key=${c._id}><span class="av" style=${{background:CL[c.name.length%6]}}>${c.name[0].toUpperCase()}</span><div style=${{flex:1}}><b>${c.name}</b><small>${ago(c.at)}</small><p>${c.text}</p></div><button class="x" aria-label="Hapus komentar" onClick=${()=>confirm('Hapus komentar ini?')&&onDel(c._id)}>×</button></div>`):html`<p class="cs">Belum ada komentar. Jadilah yang pertama.</p>`}</div></section>`}
+ <div class="cl">${list.length?list.slice().sort((a,b)=>b.at-a.at).map(c=>html`<div class="ci" key=${c._id}><span class="av" style=${{background:CL[c.name.length%6]}}>${c.name[0].toUpperCase()}</span><div style=${{flex:1}}><b>${c.name}</b><small>${ago(c.at)}</small><p>${c.text}</p></div>${stu&&html`<button class="x" aria-label="Hapus komentar" onClick=${()=>confirm('Hapus komentar ini?')&&onDel(c._id)}>×</button>`}</div>`):html`<p class="cs">Belum ada komentar. Jadilah yang pertama.</p>`}</div></section>`}
 
 function App(){
  const[session,setSession]=useState(null);
@@ -253,12 +254,16 @@ function App(){
  
  if(loading)return html`<div style=${{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>Loading...</div>`;
  
- if(!session)return html`<${Fragment}><${Login} onDos=${()=>setSession({role:'dos'})} onMhs=${()=>{setSession({role:'mhs'});notify('Berhasil masuk','Selamat datang kembali, '+AKUN.name.split(' ')[0]+'.')}}/>${T}<//>`;
+ if(!session)return html`<${Fragment}><${Login} onViewer=${()=>setSession({role:'viewer'})} onDos=${()=>setSession({role:'dos'})} onMhs=${()=>{setSession({role:'mhs'});notify('Berhasil masuk','Selamat datang kembali, '+AKUN.name.split(' ')[0]+'.')}}/>${T}<//>`;
  
  const list=mk.filter(m=>m.s==sem);
  const cnt=k=>subs.filter(x=>{const m=mkOf(x.mk);return m&&m.s==k}).length;
+ const viewer=session.role=='viewer';
+ const stu=session.role=='mhs';
+ const dosen=session.role=='dos';
+ const roleLabel=viewer?'Viewer':dosen?'Dosen pengampu':AKUN.name;
  
- return html`<${Fragment}><header><div class="wrap bar"><div class="logo"><b>T</b>Tugasku</div><div class="who"><span>${stu?AKUN.name:'Dosen pengampu'}</span><button class="btn g sm" onClick=${()=>setSession(null)}>Keluar</button></div></div></header>
+ return html`<${Fragment}><header><div class="wrap bar"><div class="logo"><b>T</b>Tugasku</div><div class="who"><span>${roleLabel}</span><button class="btn g sm" onClick=${()=>setSession(null)}>Keluar</button></div></div></header>
  <main class="wrap"><section class="top"><h1>${stu?'Halo, '+AKUN.name.split(' ')[0]:'Dashboard dosen'}</h1>
  <p>${subs.length} tugas sudah dikumpulkan. ${stu?'Pilih semester, lalu ketuk nomor pertemuan untuk mengumpulkan tugas.':'Pilih semester, lalu ketuk nomor pertemuan yang berwarna untuk melihat dan mengunduh tugas.'}</p>
  <${Typing} text="Ini website tugas. Kumpulkan, cek, dan unduh tugas kuliah dengan mudah, semua dalam satu halaman."/></section>
