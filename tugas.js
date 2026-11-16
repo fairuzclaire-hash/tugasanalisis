@@ -9,6 +9,7 @@ const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:30
 const P=16,CL=['#4f46e5','#0d9488','#e8590c','#d6336c','#1c7ed6','#b7791f'];
 const AKUN={nim:'240511102',name:'Fairuz Triharyadi',pw:'Papoi123'};
 const SOS=[{k:'in',n:'LinkedIn',u:'https://www.linkedin.com/in/username-kamu'},{k:'ig',n:'Instagram',u:'https://www.instagram.com/username_kamu'},{k:'tt',n:'TikTok',u:'https://www.tiktok.com/@username_kamu'}];
+const APP_NAME='PayFlow';
 
 const fmt=ts=>new Date(ts).toLocaleString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 const sz=b=>b>1e6?(b/1e6).toFixed(1)+' MB':Math.max(1,Math.round(b/1e3))+' KB';
@@ -54,8 +55,8 @@ function Modal({children,onClose}){useEffect(()=>{const k=e=>e.key=='Escape'&&on
 function Login({onViewer,onDos,onMhs}){const[r,setR]=useState(null),[n,setN]=useState(''),[p,setP]=useState(''),[e,setE]=useState('');
  const go=()=>n.trim()!=AKUN.nim||p!=AKUN.pw?setE('NIM atau kata sandi salah. Periksa lagi lalu coba masuk kembali.'):onMhs();
  const key=ev=>ev.key=='Enter'&&go();
- return html`<div class="lg"><section class="art"><div class="logo"><b>T</b>Tugasku</div><div><h1>Kumpulkan tugas tepat waktu, tanpa ribet.</h1>
- <div style=${{marginTop:18}}><${Typing} text="Ini website tugas. Pilih semester, ketuk pertemuan, dan tugasmu langsung terkirim ke dosen."/></div>
+ return html`<div class="lg"><section class="art"><div class="logo"><b>P</b>${APP_NAME}</div><div><h1>Kumpulkan tugas tepat waktu, tanpa ribet.</h1>
+ <div style=${{marginTop:18}}><${Typing} text="Ini website pengumpulan tugas. Pilih semester, ketuk pertemuan, dan tugasmu langsung terkirim ke dosen."/></div>
  <div class="stack"><div class="sheet s1"><i></i><i></i><i></i></div><div class="sheet s2"><i></i><i></i><i></i></div><div class="sheet s3"><i></i><i></i><i></i><span class="stamp">Terkumpul</span></div></div></div><span></span></section>
  <section class="pn"><h2>Selamat datang</h2><p>Pilih peran untuk melanjutkan.</p>
  <div class="roles"><button class="role" onClick=${onViewer}><b>Viewer</b><span>Lihat tugas tanpa bisa edit</span></button>
@@ -91,7 +92,16 @@ function MkModal({sem,onClose,onAdd}){const[n,setN]=useState(''),[s,setS]=useSta
  <div class="df"><button class="btn g" onClick=${onClose}>Batal</button><button class="btn" onClick=${()=>n.trim()?onAdd(n.trim(),s):setE('Nama mata kuliah wajib diisi.')}>Tambah</button></div><//>`}
 
 function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.name:''),[text,setText]=useState(''),[e,setE]=useState(''),[cooldown,setCooldown]=useState(0);
- const badWords=['anjing','babi','kontol','memek','jancok','bangsat','tai','asu','tolol','goblok','bodoh','idiot','bajingan','kampret','setan','ngentot','pepek','puki','jembut','perek','coli','colmek','kimak','eek','entot','pelacur','lonte','sundal','monyet','anjir','njir','bangke','silit','pantek','kntl','itil','ajg','mmk'];
+ const badWords=[
+   // Umum
+   'anjing','babi','kontol','memek','jancok','bangsat','tai','asu','tolol','goblok','bodoh','idiot','bajingan','kampret','setan','ngentot','pepek','puki','jembut','perek','coli','colmek','kimak','eek','entot','pelacur','lonte','sundal','monyet','anjir','njir','bangke','silit','pantek','kntl','itil','ajg','mmk',
+   // Sunda
+   'titit','bego','yatim','peler','heunceut','somplak','bajigur','barudak','siah','bangkong','goreng','baheula',
+   // Jawa
+   'cok','jancuk','matamu','asu','bajingan','pekok','gembel','edan','gemblung','ndasmu','cangkem','sampah','kontl','jancok',
+   // LGBT Flag emoji
+   '🏳️‍🌈','🏳‍🌈'
+ ];
  const normalize=str=>{
    let s=str.toLowerCase()
      .replace(/[^a-z]/g,'')
@@ -262,17 +272,17 @@ function App(){
  const dosen=session.role=='dos';
  const roleLabel=viewer?'Viewer':dosen?'Dosen pengampu':AKUN.name;
  
- return html`<${Fragment}><header><div class="wrap bar"><div class="logo"><b>T</b>Tugasku</div><div class="who"><span>${roleLabel}</span><button class="btn g sm" onClick=${()=>setSession(null)}>Keluar</button></div></div></header>
+ return html`<${Fragment}><header><div class="wrap bar"><div class="logo"><b>P</b>${APP_NAME}</div><div class="who"><span>${roleLabel}</span><button class="btn g sm" onClick=${()=>setSession(null)}>Keluar</button></div></div></header>
  <main class="wrap"><section class="top"><h1>${stu?'Halo, '+AKUN.name.split(' ')[0]:viewer?'Dashboard Viewer':'Dashboard Dosen'}</h1>
  <p>${subs.length} tugas sudah dikumpulkan. ${stu?'Pilih semester, lalu ketuk nomor pertemuan untuk mengumpulkan tugas.':viewer?'Lihat tugas yang sudah dikumpulkan mahasiswa.':'Pilih semester, lalu ketuk nomor pertemuan yang berwarna untuk melihat dan mengunduh tugas.'}</p>
- <${Typing} text="Ini website tugas. Kumpulkan, cek, dan unduh tugas kuliah dengan mudah, semua dalam satu halaman."/></section>
+ <${Typing} text="Ini website pengumpulan tugas. Kumpulkan, cek, dan unduh tugas kuliah dengan mudah, semua dalam satu halaman."/></section>
  <nav class="sems">${[1,2,3,4,5,6,7,8].map(k=>html`<button key=${k} class="sem" aria-pressed=${sem==k} onClick=${()=>setSem(k)}>Semester ${k}${cnt(k)?html` <em>${cnt(k)}</em>`:''}</button>`)}</nav>
  <div class="grid">${list.length?list.map((m,i)=>{const n=subs.filter(s=>s.mk==m.id).length;return html`<section key=${m.id} class="mk" style=${{['--c']:CL[m.c],['--i']:i}}><div class="mh"><div><h3>${m.n}</h3><span>Semester ${m.s}</span></div>${stu&&html`<button class="x" aria-label=${'Hapus '+m.n} onClick=${()=>confirm('Yakin ingin hapus mata kuliah ini?')&&del({k:'mk',id:m.id})}>×</button>`}</div><div class="ps">${Array.from({length:P},(_,i)=>{const p=i+1,s=subOf(m.id,p),on=!!s;return html`<button key=${p} class=${'p'+(on?' on':'')} aria-label=${'Pertemuan '+p+(on?' (sudah ada tugas)':'')} onClick=${()=>setModal({t:'p',mk:m,p})}>${p}${on&&html`<${Check}/>`}</button>`})}</div>${n?html`<small class="inf" style=${{display:'block',marginTop:8,color:'var(--mu)',fontSize:13}}>${n} tugas sudah dikumpulkan</small>`:null}</section>`}):html`<p class="empty"><b>Belum ada mata kuliah di semester ${sem}</b>${stu?'Klik tombol di bawah untuk menambahkan mata kuliah.':'Mata kuliah akan muncul setelah mahasiswa menambahkannya.'}</p>`}</div>
  ${stu&&html`<button class="btn" style=${{marginTop:24}} onClick=${()=>setModal({t:'mk',sem})}>+ Tambah mata kuliah</button>`}
  ${modal&&modal.t=='p'&&html`<${PModal} mk=${modal.mk} p=${modal.p} sub=${subOf(modal.mk.id,modal.p)} stu=${stu} onClose=${()=>setModal(null)} onSave=${(f,n)=>saveSub(modal.mk.id,modal.p,f,n)} onDel=${()=>confirm('Yakin ingin hapus?')&&del({k:'sub',id:subOf(modal.mk.id,modal.p)._id})}/>`}
  ${modal&&modal.t=='mk'&&html`<${MkModal} sem=${modal.sem} onClose=${()=>setModal(null)} onAdd=${async(n,s)=>{const newMk={s,n,c:Math.floor(Math.random()*CL.length)};try{const result=await apiCall('/api/matakuliah',{method:'POST',body:JSON.stringify(newMk)});setMk(m=>[...m,{id:result._id,s:result.s,n:result.n,c:result.c}]);setModal(null);notify('Mata kuliah ditambahkan',n)}catch(e){notify('Gagal menambah MK','Coba lagi.','err')}}}/>`}
  <${Comments} list=${comments} stu=${stu} onAdd=${addComment} onDel=${delComment}/>
- </main><footer><div class="wrap"><p>Website tugas kuliah oleh ${AKUN.name.split(' ')[0]}</p><div class="soc">${SOS.map(x=>html`<a key=${x.k} href=${x.u} target="_blank" rel="noopener" aria-label=${x.n}><${Ico} k=${x.k}/></a>`)}</div></div></footer>${T}<//>`;
+ </main><footer><div class="wrap"><p>Website pengumpulan tugas kuliah oleh ${AKUN.name.split(' ')[0]}</p><div class="soc">${SOS.map(x=>html`<a key=${x.k} href=${x.u} target="_blank" rel="noopener" aria-label=${x.n}><${Ico} k=${x.k}/></a>`)}</div></div></footer>${T}<//>`;
 }
 
 ReactDOM.render(html`<${App}/>`,document.getElementById('root'));
