@@ -102,7 +102,7 @@ function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.
    'sexual harassment','molest','molestation','grooming','sexting','dick pic','nudes','mesum','selingkuh','perselingkuhan','zinah','berzina','wanita panggilan','open bo','body shaming',
    // Toxic Behavior
    'bunuh diri','suicide','mati aja','bunuh','membunuh','pembunuhan','racist','rasisme','homophobia','transphobia','islamophobia','diskriminasi','hate speech','teror','teroris','radikalisasi',
-   'narkoba','drugs','sabu','ganja','marijuana','heroin','kokain','ekstasi','meth','overdosis','madat','opium','morphin',
+   'narkoba','drugs','sabu','marijuana','heroin','kokain','ekstasi','meth','overdosis','madat','opium','morphin',
    // SUNDA
    'titit','yatim','peler','heunceut','somplak','bajigur','barudak','siah','bangkong','goreng','baheula',
    // JAWA
@@ -125,6 +125,10 @@ function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.
    // LGBT FLAG
    '🏳️‍🌈','🏳‍🌈'
  ];
+ 
+ // Whitelist - kata yang aman dan sering false positive
+ const safeWords=['rangga','halo','hello','hai','baik','bahagia','menabung','nabung','keren','bat','habibi','habib','bertai','berabat','berabad','angga','jangga','mangga','tangga','ganja refill','ganjalan','pengganjal'];
+ 
  const normalize=str=>{
    let s=str.toLowerCase()
      .replace(/[^a-z\u4e00-\u9fff\u0e00-\u0e7f]/g,'') // Keep Latin, Chinese, Thai
@@ -134,10 +138,13 @@ function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.
    return s;
  };
  const hasBadWord=str=>{
+   const original=str.toLowerCase();
+   
+   // Check whitelist first - if contains safe word, allow it
+   if(safeWords.some(safe=>original.includes(safe)))return false;
+   
    const clean=normalize(str);
    const reversed=clean.split('').reverse().join('');
-   // Also check original string for phrases with spaces
-   const original=str.toLowerCase();
    
    return badWords.some(w=>{
      if(w.includes(' ')||w.includes('.')){
