@@ -92,78 +92,34 @@ function MkModal({sem,onClose,onAdd}){const[n,setN]=useState(''),[s,setS]=useSta
  <div class="df"><button class="btn g" onClick=${onClose}>Batal</button><button class="btn" onClick=${()=>n.trim()?onAdd(n.trim(),s):setE('Nama mata kuliah wajib diisi.')}>Tambah</button></div><//>`}
 
 function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.name:''),[text,setText]=useState(''),[e,setE]=useState(''),[cooldown,setCooldown]=useState(0);
+ 
+ // ===== FILTER KATA KASAR - WORD BOUNDARY BASED =====
  const badWords=[
-   // INDONESIA - Umum
    'kontol','memek','ngentot','jembut','bangsat','bajingan','anjing','goblok','tolol','idiot','brengsek','asu','kampret','taik','keparat','monyet','perek','lonte','pelacur','bego','dungu','sampah',
    'pepek','puki','coli','colmek','kimak','eek','entot','sundal','anjir','njir','bangke','silit','pantek','kntl','itil','ajg','mmk',
-   // INDONESIA - Pelecehan & Seksual
-   'perkosa','pemerkosa','perkosaan','lecehkan','pelecehan','cabul','perbuatan cabul','pencabulan','rudapaksa','sodomi','sodomy','pedofil','pedofilia','incest','inces',
+   'perkosa','pemerkosa','perkosaan','lecehkan','pelecehan','cabul','pencabulan','rudapaksa','sodomi','pedofil','pedofilia','incest',
    'meraba','sange','nafsu','birahi','desah','orgasme','orgasm','onani','masturbasi','bokep','pornografi','porno','telanjang','bugil','sexx',
-   'sexual harassment','molest','molestation','grooming','sexting','dick pic','nudes','mesum','selingkuh','perselingkuhan','zinah','berzina','wanita panggilan','open bo','body shaming',
-   // Toxic Behavior
-   'bunuh diri','suicide','mati aja','bunuh','membunuh','pembunuhan','racist','rasisme','homophobia','transphobia','islamophobia','diskriminasi','hate speech','teror','teroris','radikalisasi',
+   'molest','molestation','grooming','sexting','nudes','mesum','selingkuh','zinah','berzina',
+   'suicide','racist','rasisme','homophobia','transphobia','islamophobia','diskriminasi','teror','teroris','radikalisasi',
    'narkoba','drugs','sabu','marijuana','heroin','kokain','ekstasi','meth','overdosis','madat','opium','morphin',
-   // SUNDA
-   'titit','yatim','peler','heunceut','somplak','bajigur','barudak','siah','bangkong','goreng','baheula',
-   // JAWA
-   'cok','jancuk','matamu','pekok','gembel','edan','gemblung','ndasmu','cangkem','jancok','kontl',
-   // MALAYSIA
-   'pukimak','kimak','cibai','lancau','bodoh','bangang','sial','celaka','bengap','pundek','palat','pantat',
-   // PHILIPPINES / TAGALOG
-   'putangina','puta','putang ina','gago','tanga','bobo','ulol','tarantado','leche','lintik','hayop','hindot','pakyu','inutil','demonyo',
-   // CHINA / MANDARIN
-   '傻逼','傻屄','笨蛋','白痴','废物','混蛋','王八蛋','操','卧槽','他妈的','去死','狗东西','垃圾',
-   // THAILAND
-   'ควย','หี','เหี้ย','สัส','ไอ้เหี้ย','อีเหี้ย','โง่','ควาย','ระยำ','ชาติหมา',
-   // ENGLISH
    'fuck','fucking','motherfucker','bitch','asshole','bastard','dick','dickhead','cunt','shit','bullshit','dumbass','retard','stfu','gtfo',
-   'rape','rapist','molest','sexual assault','harassment','abuse','pedophile','pedo','incest','grooming','nudes','dick pic','sexting','porn','xxx','horny','orgasm','masturbate','jerk off',
-   'kill yourself','kys','suicide','die','racist','nazi','fascist','terrorist','bomb','shoot','murder','genocide','drugs','cocaine','heroin','meth',
-   // BYPASS VARIATIONS
-   'lotnok','koontooll','k0nt0l','k o n t o l','k@nt0l','k.o.n.t.o.l','kntol','koontol','kontoll','kontolll','memekk','m3m3k','m e m e k','ng3nt0t','b4ngs4t','g0bl0k','t0l0l',
-   'f.u.c.k','f u c k','sh1t','b1tch','a55h0le','p0rn','s3x','r4p3','k1ll','seppuku','seks bebas','free sex','one night stand','fwb',
-   // LGBT FLAG
-   '🏳️‍🌈','🏳‍🌈'
+   'rape','rapist','molest','pedophile','pedo','incest','grooming','porn','xxx','horny','orgasm','masturbate',
+   'racist','nazi','fascist','terrorist','bomb','shoot','murder','genocide','drugs','cocaine','heroin','meth',
+   'lotnok','koontooll','k0nt0l','kntol','koontol','kontoll','kontolll','memekk','m3m3k','ng3nt0t','b4ngs4t','g0bl0k','t0l0l',
+   'sh1t','b1tch','a55h0le','p0rn','s3x','r4p3','k1ll'
  ];
  
- // Whitelist - kata yang aman dan sering false positive
- const safeWords=['rangga','halo','hello','hai','baik','bahagia','menabung','nabung','keren','bat','habibi','habib','bertai','berabat','berabad','angga','jangga','mangga','tangga','ganja refill','ganjalan','pengganjal'];
+ const allowList=['rangga','angga','jangga','mangga','tangga','halo','hello','hai','baik','bahagia','menabung','nabung','tabung','sholat','solat','salat','barudak','goreng','keren','kerja','paksa','dipaksa','memaksa','habibi','habib','nabi','sahabat','idaman','ideal','video','audio','stadium','makan','minangkabau'];
  
- const normalize=str=>{
-   let s=str.toLowerCase()
-     .replace(/[^a-z\u4e00-\u9fff\u0e00-\u0e7f]/g,'') // Keep Latin, Chinese, Thai
-     .replace(/(.)\1+/g,'$1')
-     .replace(/0/g,'o').replace(/1/g,'i').replace(/3/g,'e').replace(/4/g,'a').replace(/5/g,'s').replace(/7/g,'t').replace(/8/g,'b')
-     .replace(/@/g,'a').replace(/\$/g,'s').replace(/\./g,'');
-   return s;
- };
- const hasBadWord=str=>{
-   const original=str.toLowerCase();
-   
-   // Check whitelist first - if contains safe word, allow it
-   if(safeWords.some(safe=>original.includes(safe)))return false;
-   
-   const clean=normalize(str);
-   const reversed=clean.split('').reverse().join('');
-   
-   return badWords.some(w=>{
-     if(w.includes(' ')||w.includes('.')){
-       // Check phrase/spaced words directly
-       return original.includes(w);
-     }
-     
-     const cleanWord=normalize(w);
-     
-     // For short words (3 chars or less), check with word boundary
-     if(cleanWord.length<=3){
-       const regex=new RegExp(`\\b${cleanWord}\\b`);
-       return regex.test(clean);
-     }
-     
-     // For longer words, check substring
-     return clean.includes(cleanWord)||reversed.includes(cleanWord)||clean.includes(cleanWord.split('').reverse().join(''));
-   });
- };
+ const normalizeWord=w=>w.toLowerCase().replace(/4/g,'a').replace(/1/g,'i').replace(/3/g,'e').replace(/0/g,'o').replace(/5/g,'s').replace(/7/g,'t').replace(/8/g,'b').replace(/@/g,'a').replace(/\$/g,'s').replace(/(.)\1+/g,'$1');
+ 
+ const tokenize=t=>{const tokens=t.toLowerCase().split(/[\s,.!?;:]+/).filter(w=>w.length>0);return tokens.flatMap(tk=>{const m=tk.match(/^([a-z@\$]+)(\d*)$/i);if(m&&m[2])return[m[1]];return[tk]})};
+ 
+ const detectSpaced=t=>{const m=t.match(/\b([a-z])[\s.]+([a-z])[\s.]+([a-z])[\s.]+([a-z])[\s.]*([a-z])?[\s.]*([a-z])?[\s.]*([a-z])?\b/gi);if(!m)return null;for(const x of m){const c=x.replace(/[\s.]+/g,'').toLowerCase();const n=normalizeWord(c);if(badWords.includes(n))return n}return null};
+ 
+ const hasBadWord=t=>{const words=tokenize(t);for(const w of words){if(allowList.includes(w))continue;const n=normalizeWord(w);if(badWords.includes(n))return true}if(detectSpaced(t))return true;const phrases=['bunuh diri','perbuatan cabul','mati aja','membunuh diri','sexual harassment','hate speech','dick pic','open bo','body shaming','wanita panggilan','kill yourself','free sex','one night stand'];for(const p of phrases)if(t.toLowerCase().includes(p))return true;return false};
+ // ===== END FILTER =====
+ 
  useEffect(()=>{if(cooldown>0){const t=setTimeout(()=>setCooldown(c=>c-1),1000);return()=>clearTimeout(t)}},[cooldown]);
  const send=()=>{
    if(cooldown>0)return setE(`Tunggu ${cooldown} detik sebelum mengirim komentar lagi.`);
@@ -176,6 +132,7 @@ function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.
  <div class="f"><label for="ct">Komentar</label><textarea id="ct" rows="3" maxLength="400" value=${text} onChange=${x=>setText(x.target.value)}></textarea></div>
  <div style=${{display:'flex',gap:12,alignItems:'center'}}><button class="btn" onClick=${send}>Kirim komentar</button><span class="err" role="alert" style=${{margin:0}}>${e}</span></div>
  <div class="cl">${list.length?list.slice().sort((a,b)=>b.at-a.at).map(c=>html`<div class="ci" key=${c._id}><span class="av" style=${{background:CL[c.name.length%6]}}>${c.name[0].toUpperCase()}</span><div style=${{flex:1}}><b>${c.name}</b><small>${ago(c.at)}</small><p>${c.text}</p></div>${stu&&html`<button class="x" aria-label="Hapus komentar" onClick=${()=>confirm('Hapus komentar ini?')&&onDel(c._id)}>×</button>`}</div>`):html`<p class="cs">Belum ada komentar. Jadilah yang pertama.</p>`}</div></section>`}
+
 
 function App(){
  const[session,setSession]=useState(null);
