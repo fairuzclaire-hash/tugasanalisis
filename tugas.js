@@ -93,9 +93,16 @@ function MkModal({sem,onClose,onAdd}){const[n,setN]=useState(''),[s,setS]=useSta
 
 function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.name:''),[text,setText]=useState(''),[e,setE]=useState(''),[cooldown,setCooldown]=useState(0);
  const badWords=[
-   // INDONESIA
+   // INDONESIA - Umum
    'kontol','memek','ngentot','jembut','bangsat','bajingan','anjing','babi','goblok','tolol','idiot','brengsek','asu','kampret','tai','taik','keparat','monyet','perek','lonte','pelacur','bego','dungu','sampah',
    'pepek','puki','coli','colmek','kimak','eek','entot','sundal','anjir','njir','bangke','silit','pantek','kntl','itil','ajg','mmk',
+   // INDONESIA - Pelecehan & Seksual
+   'perkosa','pemerkosa','perkosaan','leceh','melecehkan','pelecehan','cabul','perbuatan cabul','pencabulan','rudapaksa','sodomi','sodomy','pedofil','pedofilia','incest','inces',
+   'raba','meraba','pegang','megang','sange','nafsu','birahi','desah','orgasme','orgasm','onani','masturbasi','bokep','pornografi','porno','telanjang','bugil','oral','anal','seks','sex','sexx',
+   'sexual harassment','molest','molestation','grooming','sexting','dick pic','nudes','mesum','selingkuh','perselingkuhan','zinah','berzina','wanita panggilan','open bo','body shaming',
+   // Toxic Behavior
+   'bunuh diri','suicide','mati aja','bunuh','membunuh','pembunuhan','racist','rasisme','homophobia','transphobia','islamophobia','diskriminasi','hate speech','teror','teroris','radikalisasi',
+   'narkoba','drugs','sabu','ganja','marijuana','heroin','kokain','ekstasi','meth','overdosis','madat','opium','morphin',
    // SUNDA
    'titit','yatim','peler','heunceut','somplak','bajigur','barudak','siah','bangkong','goreng','baheula',
    // JAWA
@@ -110,8 +117,11 @@ function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.
    'ควย','หี','เหี้ย','สัส','ไอ้เหี้ย','อีเหี้ย','โง่','ควาย','ระยำ','ชาติหมา',
    // ENGLISH
    'fuck','fucking','motherfucker','bitch','asshole','bastard','dick','dickhead','cunt','shit','bullshit','dumbass','retard','stfu','gtfo',
+   'rape','rapist','molest','sexual assault','harassment','abuse','pedophile','pedo','incest','grooming','nudes','dick pic','sexting','porn','xxx','horny','orgasm','masturbate','jerk off',
+   'kill yourself','kys','suicide','die','racist','nazi','fascist','terrorist','bomb','shoot','murder','genocide','drugs','cocaine','heroin','meth',
    // BYPASS VARIATIONS
-   'lotnok','koontooll','k0nt0l','k o n t o l','k@nt0l','k.o.n.t.o.l','kntol','koontol','kontoll','kontolll','memekk','m3m3k','m e m e k','ng3nt0t','b4ngs4t','g0bl0k','t0l0l','f.u.c.k','f u c k','sh1t','b1tch','a55h0le',
+   'lotnok','koontooll','k0nt0l','k o n t o l','k@nt0l','k.o.n.t.o.l','kntol','koontol','kontoll','kontolll','memekk','m3m3k','m e m e k','ng3nt0t','b4ngs4t','g0bl0k','t0l0l',
+   'f.u.c.k','f u c k','sh1t','b1tch','a55h0le','p0rn','s3x','r4p3','k1ll','seppuku','seks bebas','free sex','one night stand','fwb',
    // LGBT FLAG
    '🏳️‍🌈','🏳‍🌈'
  ];
