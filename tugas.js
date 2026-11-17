@@ -94,11 +94,11 @@ function MkModal({sem,onClose,onAdd}){const[n,setN]=useState(''),[s,setS]=useSta
 function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.name:''),[text,setText]=useState(''),[e,setE]=useState(''),[cooldown,setCooldown]=useState(0);
  const badWords=[
    // INDONESIA - Umum
-   'kontol','memek','ngentot','jembut','bangsat','bajingan','anjing','babi','goblok','tolol','idiot','brengsek','asu','kampret','tai','taik','keparat','monyet','perek','lonte','pelacur','bego','dungu','sampah',
+   'kontol','memek','ngentot','jembut','bangsat','bajingan','anjing','goblok','tolol','idiot','brengsek','asu','kampret','taik','keparat','monyet','perek','lonte','pelacur','bego','dungu','sampah',
    'pepek','puki','coli','colmek','kimak','eek','entot','sundal','anjir','njir','bangke','silit','pantek','kntl','itil','ajg','mmk',
    // INDONESIA - Pelecehan & Seksual
-   'perkosa','pemerkosa','perkosaan','leceh','melecehkan','pelecehan','cabul','perbuatan cabul','pencabulan','rudapaksa','sodomi','sodomy','pedofil','pedofilia','incest','inces',
-   'raba','meraba','pegang','megang','sange','nafsu','birahi','desah','orgasme','orgasm','onani','masturbasi','bokep','pornografi','porno','telanjang','bugil','oral','anal','seks','sex','sexx',
+   'perkosa','pemerkosa','perkosaan','lecehkan','pelecehan','cabul','perbuatan cabul','pencabulan','rudapaksa','sodomi','sodomy','pedofil','pedofilia','incest','inces',
+   'meraba','sange','nafsu','birahi','desah','orgasme','orgasm','onani','masturbasi','bokep','pornografi','porno','telanjang','bugil','sexx',
    'sexual harassment','molest','molestation','grooming','sexting','dick pic','nudes','mesum','selingkuh','perselingkuhan','zinah','berzina','wanita panggilan','open bo','body shaming',
    // Toxic Behavior
    'bunuh diri','suicide','mati aja','bunuh','membunuh','pembunuhan','racist','rasisme','homophobia','transphobia','islamophobia','diskriminasi','hate speech','teror','teroris','radikalisasi',
@@ -138,12 +138,22 @@ function Comments({list,stu,onAdd,onDel}){const[name,setName]=useState(stu?AKUN.
    const reversed=clean.split('').reverse().join('');
    // Also check original string for phrases with spaces
    const original=str.toLowerCase();
+   
    return badWords.some(w=>{
      if(w.includes(' ')||w.includes('.')){
        // Check phrase/spaced words directly
        return original.includes(w);
      }
+     
      const cleanWord=normalize(w);
+     
+     // For short words (3 chars or less), check with word boundary
+     if(cleanWord.length<=3){
+       const regex=new RegExp(`\\b${cleanWord}\\b`);
+       return regex.test(clean);
+     }
+     
+     // For longer words, check substring
      return clean.includes(cleanWord)||reversed.includes(cleanWord)||clean.includes(cleanWord.split('').reverse().join(''));
    });
  };
